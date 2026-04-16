@@ -52,6 +52,10 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
+# Увеличение времени ожидания для больших файлов
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -94,7 +98,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'course_db',
+        'NAME': 'testonline_db',
         'USER': 'postgres',
         'PASSWORD': 'root',
         'HOST': 'localhost',
@@ -169,10 +173,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # settings email
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# settings.py
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+EMAIL_USE_LOCALTIME = True
 EMAIL_HOST = 'mail.ksu42.ru'  # Например, 'smtp.gmail.com' для Gmail
-EMAIL_PORT = 25  # Порт для SMTP (обычно 587 для TLS)
-EMAIL_USE_TLS = False  # Использовать TLS (True для большинства SMTP-серверов)
+EMAIL_PORT = 587  # Порт для SMTP (обычно 587 для TLS)
+EMAIL_USE_TLS = True  # Использовать TLS (True для большинства SMTP-серверов)
+EMAIL_USE_SSL=False
 
 EMAIL_HOST_USER = 'nikolaevams@ksu42.ru'  # Ваш email
 EMAIL_HOST_PASSWORD = 'Qfdi0a99bv'  # Пароль от вашего email

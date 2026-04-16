@@ -39,11 +39,12 @@ class CategoryAdmin(DraggableMPTTAdmin):
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     inlines = [ArticleFileInline]
-    list_display = ('title', 'author', 'category', 'status', 'files_count')
+    list_display = ('title', 'author', 'category', 'work_type', 'status', 'files_count')
+    list_filter = ('work_type', 'status', 'category')
+    search_fields = ('title', 'author__username')
 
     def files_count(self, obj):
         return obj.files.count()
-
     files_count.short_description = 'Файлов'
 
 
@@ -72,3 +73,4 @@ class ArticleFileAdmin(admin.ModelAdmin):
     def file_type(self, obj):
         return obj.get_file_type()
     file_type.short_description = 'Тип файла'
+

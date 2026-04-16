@@ -13,6 +13,19 @@ from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
+import os
+from django.db import models
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
+from .image_processor import ImageProcessor
+import logging
+
+logger = logging.getLogger(__name__)
+
+def validate_file_size(value):
+    filesize = value.size
+    if filesize > 10 * 1024 * 1024:
+        raise ValidationError("Максимальный размер файла 10MB")
 
 class Article(models.Model):
     """
@@ -43,18 +56,24 @@ class Article(models.Model):
         ('published', 'Опубликовано'), 
         ('draft', 'Черновик')
     )
+    
+    WORK_TYPE_OPTIONS = (
+        ('test', 'Тестовая работа'),
+        ('general', 'Общая работа'),
+    )
 
     title = models.CharField(verbose_name='Заголовок', max_length=255)
     slug = models.SlugField(verbose_name='URL', max_length=255, blank=True, unique=True)
     short_description = CKEditor5Field(max_length=500, verbose_name='Краткое описание', config_name='extends')
     full_description = CKEditor5Field(verbose_name='Полное описание', config_name='extends')
     thumbnail = models.ImageField(
-        verbose_name='Эталон', 
+        verbose_name='Эталон (для тестов)', 
         blank=True, 
         upload_to='images/thumbnails/%Y/%m/%d/', 
         validators=[FileExtensionValidator(allowed_extensions=('png', 'jpg', 'webp', 'jpeg', 'gif'))]
     )
     status = models.CharField(choices=STATUS_OPTIONS, default='published', verbose_name='Статус поста', max_length=10)
+    work_type = models.CharField(choices=WORK_TYPE_OPTIONS, default='test', verbose_name='Тип работы', max_length=10)
     time_create = models.DateTimeField(auto_now_add=True, verbose_name='Время добавления')
     time_update = models.DateTimeField(auto_now=True, verbose_name='Время обновления')
     author = models.ForeignKey(to=User, verbose_name='Автор', on_delete=models.SET_DEFAULT, related_name='author_posts', default=1)
@@ -159,20 +178,6 @@ class Comment(MPTTModel):
         return f'{self.author}:{self.content}'
 
 
-import os
-from django.db import models
-from django.core.validators import FileExtensionValidator
-from django.core.exceptions import ValidationError
-from .image_processor import ImageProcessor
-import logging
-
-logger = logging.getLogger(__name__)
-
-def validate_file_size(value):
-    filesize = value.size
-    if filesize > 10 * 1024 * 1024:
-        raise ValidationError("Максимальный размер файла 10MB")
-
 class ArticleFile(models.Model):
     article = models.ForeignKey('Article', on_delete=models.CASCADE, related_name='files')
     file = models.FileField(
@@ -254,3 +259,4 @@ class ArticleFile(models.Model):
 
     def __str__(self):
         return self.title or os.path.basename(self.file.name)
+    

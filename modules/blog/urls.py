@@ -14,4 +14,5 @@ urlpatterns = [
     path('articles/tags/<str:tag>/', ArticleByTagListView.as_view(), name='articles_by_tags'),
     path('category/<str:slug>/', ArticleByCategoryListView.as_view(), name="articles_by_category"),
     path('search/', ArticleSearchResultView.as_view(), name='search'),
+
 ]

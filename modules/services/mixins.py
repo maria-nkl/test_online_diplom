@@ -9,11 +9,18 @@ class AuthorRequiredMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if request.user.is_authenticated:
-            if request.user != self.get_object().author or request.user.is_staff:
-                messages.info(request, 'Изменение и удаление статьи доступно только автору')
-                return redirect('home')
-        return super().dispatch(request, *args, **kwargs)
+        
+        obj = self.get_object()
+        
+        # Разрешаем доступ если:
+        # 1. Пользователь - автор статьи
+        # 2. ИЛИ пользователь - администратор (is_staff или is_superuser)
+        if request.user == obj.author or request.user.is_staff or request.user.is_superuser:
+            return super().dispatch(request, *args, **kwargs)
+        
+        # Иначе - отказываем
+        messages.info(request, 'Изменение и удаление статьи доступно только автору')
+        return redirect('home')
 
 
 class UserIsNotAuthenticated(UserPassesTestMixin):

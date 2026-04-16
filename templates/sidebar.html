@@ -1,21 +1,155 @@
 {% load mptt_tags %}
 
-<div class="card">
+<div class="card mb-3">
     <div class="card-body">
-      <h5 class="card-title">Категории</h5>
-      {% full_tree_for_model blog.Category as categories %}
-      <p class="card-text">
-        <ul>
-            {% recursetree categories %}
-                <li>
-                 <a href="{{ node.get_absolute_url }}">{{ node.title }}</a>
-                </li>
-            
-                {% if not node.is_leaf_node %}<ul>{% endif %}
-                    {{children}}
-                {% if not node.is_leaf_node %}</ul>{% endif %}
-            {% endrecursetree %}
-        </ul>
-      </p>
+        <h5 class="card-title" style="margin-bottom: 12px;">🔍 Фильтры</h5>
+        
+        <!-- Тип работы -->
+        <div class="mb-3">
+            <h6 class="card-subtitle mb-2 text-muted">Тип работы</h6>
+            <div class="form-check mb-2">
+                <input class="form-check-input filter-checkbox" type="checkbox" id="filter-test" value="test" 
+                       data-filter-type="work_type">
+                <label class="form-check-label" for="filter-test">
+                    📝 Тестовая работа
+                </label>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input filter-checkbox" type="checkbox" id="filter-general" value="general"
+                       data-filter-type="work_type">
+                <label class="form-check-label" for="filter-general">
+                    📄 Общая работа
+                </label>
+            </div>
+        </div>
+        
+        <hr style="margin: 12px 0;">
+        
+        <!-- Категории -->
+        <div>
+            <h6 class="card-subtitle mb-2 text-muted">Категории</h6>
+            <div class="categories-list">
+                {% full_tree_for_model blog.Category as categories %}
+                {% recursetree categories %}
+                    <div class="form-check mb-1">
+                        <input class="form-check-input category-checkbox" type="checkbox" 
+                               id="category_{{ node.id }}" value="{{ node.slug }}"
+                               data-filter-type="category">
+                        <label class="form-check-label" for="category_{{ node.id }}">
+                            {{ node.title }}
+                        </label>
+                    </div>
+                    {% if not node.is_leaf_node %}
+                        <div class="ps-3">
+                            {{ children }}
+                        </div>
+                    {% endif %}
+                {% endrecursetree %}
+            </div>
+        </div>
+        
+        <hr style="margin: 12px 0;">
+        
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary btn-sm" id="apply-filters">
+                <i class="fas fa-filter"></i> Применить фильтры
+            </button>
+            <button class="btn btn-secondary btn-sm" id="clear-filters">
+                <i class="fas fa-times"></i> Сбросить все
+            </button>
+        </div>
     </div>
-  </div>
+</div>
+
+<style>
+    .card-title {
+        margin-bottom: 12px !important;
+    }
+    hr {
+        margin: 12px 0 !important;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Получаем все чекбоксы фильтров
+    const workTypeCheckboxes = document.querySelectorAll('.filter-checkbox');
+    const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
+    const applyBtn = document.getElementById('apply-filters');
+    const clearBtn = document.getElementById('clear-filters');
+    
+    // Получаем текущие параметры из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentWorkTypes = urlParams.get('work_type') ? urlParams.get('work_type').split(',') : [];
+    const currentCategories = urlParams.get('category') ? urlParams.get('category').split(',') : [];
+    
+    // Устанавливаем состояние чекбоксов из URL
+    workTypeCheckboxes.forEach(checkbox => {
+        if (currentWorkTypes.includes(checkbox.value)) {
+            checkbox.checked = true;
+        }
+    });
+    
+    categoryCheckboxes.forEach(checkbox => {
+        if (currentCategories.includes(checkbox.value)) {
+            checkbox.checked = true;
+        }
+    });
+    
+    // Применить фильтры
+    applyBtn.addEventListener('click', function() {
+        // Собираем выбранные типы работ
+        const selectedWorkTypes = [];
+        workTypeCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                selectedWorkTypes.push(checkbox.value);
+            }
+        });
+        
+        // Собираем выбранные категории
+        const selectedCategories = [];
+        categoryCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                selectedCategories.push(checkbox.value);
+            }
+        });
+        
+        // Строим новый URL
+        const params = new URLSearchParams();
+        
+        if (selectedWorkTypes.length > 0) {
+            params.append('work_type', selectedWorkTypes.join(','));
+        }
+        
+        if (selectedCategories.length > 0) {
+            params.append('category', selectedCategories.join(','));
+        }
+        
+        // Сохраняем параметры поиска если есть
+        const currentSearch = urlParams.get('do');
+        if (currentSearch) {
+            params.append('do', currentSearch);
+        }
+        
+        const queryString = params.toString();
+        window.location.href = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    });
+    
+    // Сбросить все фильтры
+    clearBtn.addEventListener('click', function() {
+        // Снимаем все галочки
+        workTypeCheckboxes.forEach(checkbox => checkbox.checked = false);
+        categoryCheckboxes.forEach(checkbox => checkbox.checked = false);
+        
+        // Переходим на страницу без параметров фильтрации
+        const params = new URLSearchParams();
+        const currentSearch = urlParams.get('do');
+        if (currentSearch) {
+            params.append('do', currentSearch);
+        }
+        
+        const queryString = params.toString();
+        window.location.href = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+    });
+});
+</script>
